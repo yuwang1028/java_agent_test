@@ -1,0 +1,175 @@
+#######################GOALS AND GAPS###############################
+
+1. Observability Inspector Agent
+Goal:
+Use rule engines / linters (e.g., Checkstyle, SpotBugs, OpenTelemetry rules) to detect missing instrumentation.
+
+Standardized Evaluation:
+Rely not only on LLM but also on defined observability standards (e.g., enterprise log/span naming conventions).
+
+Gap:
+Currently, the detection logic for missing Trace/Span relies solely on LLM and lacks an enterprise rule library.
+There is no “unified enterprise standard configuration file” as a reference input.
+
+
+
+
+2.Validation Agent
+Goal:
+
+Score: Check whether code changes meet observability + documentation coverage requirements.
+
+Integrate with CI/CD or at least a simulated validation flow (pass/fail).
+
+Gap:
+
+Currently, there is no result validation, only one-way report generation.
+
+No “pass/fail + score” mechanism.
+
+
+
+
+3. DocBuilder Agent
+Goal:
+
+Generate visualized documents (Mermaid diagrams / UML / automatic README updates).
+
+Current reports are Markdown + text (no diagrams).
+
+Gap:
+
+Lacks automatic generation of call relationship diagrams / UML.
+
+No synchronization with enterprise knowledge bases (e.g., wiki).
+
+
+
+4. Orchestrator Agent
+Goal:
+
+Multi-Agent scheduling and parallel execution (asyncio).
+
+Context memory (e.g., multiple files sharing context analysis).
+
+Gap:
+
+Currently, the orchestrator only performs sequential calls, without task queueing or dynamic multi-agent scheduling.
+
+
+
+5. Tool Integration
+Goal:
+
+Integrate with existing enterprise tools (Jira, ServiceNow, CI/CD webhooks, Slackbot).
+
+Gap:
+
+Currently only performs local static analysis, without external integrations.
+
+
+#########################SOME OPTIMIZATIONS#############################
+
+1. Cache (Caching Mechanism)
+
+Purpose:
+
+Avoid redundant computation (e.g., repeatedly cloning Git repositories, repeatedly analyzing the same code).And Reduce LLM invocation costs (caching results for the same code segments).
+
+
+Implementation Approach:
+Git repository → clone once and cache to ~/.cache/java_agent_repos.
+
+LLM Result Caching:
+Use a hash (filename + method signature + code content) as a key to store previous analysis results (JSON).
+
+Optional Library:
+diskcache (lightweight persistent caching).
+
+
+2. Task Queue System 
+
+Purpose:
+Queue each Agent task (e.g., file analysis, report generation) for processing, supporting concurrency and retries.Facilitate long-running tasks, retry failed tasks, and enable distributed execution.
+
+Implementation Approach:
+Minimal Version: asyncio.Queue + asyncio.create_task().
+Advanced Version: Celery / RQ / Dramatiq (requires Redis).
+
+Interfaces:
+add_task(task) → enqueue task.
+worker() → continuously fetch tasks from the queue and invoke the corresponding Agent.
+
+3. Agent Memory Store 
+Purpose:
+Preserve context for each run (e.g., previous code analysis results, validation scores).Provide historical information for multi-round tasks (e.g., difference between previous scan and current scan).
+
+Storage formats:
+File level (JSON / SQLite)
+Vector database (Milvus / Weaviate) → supports semantic search.
+
+Implementatian Approach:
+Advanced version: LangChain Memory (e.g., ConversationBufferMemory) + vector database (for long text).
+
+
+
+4. Task Trigger Interfaces (CLI, Slackbot, CI/CD)
+Purpose:
+Support triggering tasks from different entry points:
+CLI: command line → python orchestrator.py --repo <url>
+Slackbot: send /analyze repo_url → triggers Orchestrator
+CI/CD: automatically triggers after code submission
+
+Implementation Approach:
+CLI → argparse
+Slackbot → use Slack API
+CI/CD → GitHub Actions / GitLab CI → invoke CLI interface
+
+5. Prompt Router / LLM Gateway
+Purpose:
+Dynamically select LLM:Short tasks use gpt-4o-mini (fast and cost-efficient). AND Long or complex tasks use gpt-4o
+
+Centralized Prompt and Model Management:
+Provide unified entry point: llm_gateway(prompt, type="analysis")
+
+Implementation Approach:
+Router:
+Select model based on task type
+
+LLM Gateway:
+Integrate OpenAI, Anthropic, Google. Allow switching providers in the future.
+
+           ┌────────────────────────────────────┐
+           │         Task Trigger Interfaces    │
+           │   (CLI / Slackbot / CI-CD Hook)    │
+           └───────────────┬────────────────────┘
+                           │
+             ┌─────────────▼─────────────┐
+             │       Task Queue          │
+             │  (Async Queue / Celery)   │
+             └─────────────┬─────────────┘
+                           │
+                ┌──────────▼─────────┐
+                │    Orchestrator     │
+                └───────┬────────────┘
+                        │
+        ┌────────────────────────────────────┐
+        │           Multi-Agent System       │
+        │                                    │
+        │  - Code Understanding Agent        │
+        │  - Instrumentation Advisor Agent   │
+        │  - Observability Inspector Agent   │
+        │  - Validation Agent                │
+        │  - DocBuilder Agent                │
+        └────────────────────────────────────┘
+                        │
+        ┌────────────────────────────────────┐
+        │        Shared Services             │
+        │  - Cache                           │
+        │  - Memory Store (Vector DB / JSON) │
+        │  - Prompt Router / LLM Gateway     │
+        └────────────────────────────────────┘
+
+
+
+####################HOST TO GOOGLE CLOUD################################

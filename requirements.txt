@@ -1,0 +1,7 @@
+javalang
+GitPython
+langchain
+langchain-openai
+pydantic
+openai
+python-dotenv
