@@ -1,16 +1,8 @@
 import os
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_google_vertexai import ChatVertexAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import asyncio
-
-# ==== 0. Load env ====
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    raise ValueError("OPENAI_API_KEY not found in .env file")
-os.environ["OPENAI_API_KEY"] = openai_api_key
 
 # ==== 1. Output Model ====
 class InstrumentationSuggestion(BaseModel):
@@ -21,8 +13,8 @@ class InstrumentationSuggestion(BaseModel):
 
 parser = PydanticOutputParser(pydantic_object=InstrumentationSuggestion)
 
-# ==== 2. LLM ====
-llm = ChatOpenAI(model="gpt-4o", temperature=0.5)
+# ==== 2. Init Vertex AI LLM ====
+llm = ChatVertexAI(model_name="chat-bison", temperature=0.5)
 
 # ==== 3. Prompt ====
 def build_prompt(method_name: str, method_code: str):
@@ -50,12 +42,12 @@ Method code:
 {parser.get_format_instructions()}
 """
 
+# ==== 4. Async handler ====
 async def process_method(method):
     try:
         prompt = build_prompt(method["name"], method["content"])
         response = await llm.ainvoke(prompt)
         parsed = parser.parse(response.content)
-        # ===== Ensure modified_code always has value =====
         if not parsed.modified_code.strip():
             parsed.modified_code = method["content"]
         return parsed
@@ -67,6 +59,7 @@ async def process_method(method):
             modified_code=method["content"]
         )
 
+# ==== 5. Entry point ====
 async def run_instrumentation_advisor(methods):
     tasks = [asyncio.create_task(process_method(m)) for m in methods]
     return await asyncio.gather(*tasks)

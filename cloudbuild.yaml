@@ -1,14 +1,29 @@
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test', '.']
-  env:
-    - 'OPENAI_API_KEY=sk-xxxxxx'  # or use secret manager reference
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test',
+      '.'
+    ]
 
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'gcloud'
-  args:
-    ['run','deploy','java-agent-test',
-     '--image','us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test',
-     '--region','us-central1','--platform','managed',
-     '--allow-unauthenticated',
-     '--set-env-vars','OPENAI_API_KEY=sk-xxxxxx']
+  # Step 2: Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test'
+    ]
+
+  # Step 3: Deploy image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', 'java-agent-test',
+      '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated'
+    ]
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/java-agents/java-agent-test'

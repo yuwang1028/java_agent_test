@@ -1,7 +1,7 @@
 javalang
 GitPython
 langchain
-langchain-openai
 pydantic
-openai
 python-dotenv
+langchain-google-vertexai
+google-cloud-aiplatform

@@ -2,18 +2,11 @@ import os
 import shutil
 import tempfile
 import javalang
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-
-# ==== 0. Load environment variables ====
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    raise ValueError("OPENAI_API_KEY not found in .env file")
-os.environ["OPENAI_API_KEY"] = openai_api_key
+#from dotenv import load_dotenv
+from langchain_google_vertexai import ChatVertexAI
 
 # ==== 1. Init optional LLM ====
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm = ChatVertexAI(model_name="chat-bison", temperature=0.2)
 
 # ==== 2. Repo operations ====
 def clone_repo(repo_url, branch="main"):

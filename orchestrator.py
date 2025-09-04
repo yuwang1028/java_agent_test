@@ -5,7 +5,9 @@ from agents.observability_inspector_agent import inspect_observability
 from agents.validation_agent import validate_observability
 from agents.docbuilder_agent import generate_report
 from dotenv import load_dotenv
-load_dotenv()
+
+# Optional: for local testing
+#load_dotenv()
 
 async def main(repo_url, branch="main", output_path="trace_report.md"):
     tmp_dir = clone_repo(repo_url, branch)
