@@ -6,7 +6,7 @@ import javalang
 from langchain_google_vertexai import ChatVertexAI
 
 # ==== 1. Init optional LLM ====
-llm = ChatVertexAI(model_name="chat-bison", temperature=0.2)
+llm = ChatVertexAI(model_name="gemini-2.5-pro", temperature=0.2)
 
 # ==== 2. Repo operations ====
 def clone_repo(repo_url, branch="main"):

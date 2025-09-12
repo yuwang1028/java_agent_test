@@ -14,7 +14,7 @@ class InstrumentationSuggestion(BaseModel):
 parser = PydanticOutputParser(pydantic_object=InstrumentationSuggestion)
 
 # ==== 2. Init Vertex AI LLM ====
-llm = ChatVertexAI(model_name="chat-bison", temperature=0.5)
+llm = ChatVertexAI(model_name="gemini-2.5-pro", temperature=0.5)
 
 # ==== 3. Prompt ====
 def build_prompt(method_name: str, method_code: str):
